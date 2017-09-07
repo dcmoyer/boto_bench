@@ -1,5 +1,6 @@
 
 import pickle
+
 import cloudpickle
 import boto3
 
@@ -68,6 +69,7 @@ class Bench():
       self.bucket_index = pickle.load(open(self.bucket_index_file,"rb"))
 
     self._create_bucket()
+    self.Bucket = self.s3.Bucket(self.bucket_name)
 
   def _create_bucket(self):
     #TODO: switch to try except update
@@ -85,27 +87,61 @@ class Bench():
         raise(e)
       print("[Boto Bench]: TODO: Collect Index from existing bucket.")
       #print("[Boto Bench]: BB bucket exists, updating index.")
-      #self.Bucket = self.s3.Bucket(self.bucket_name)
+      #
       #self.index = self.Bucket.objects.all()
     return
 
-  def __del__(self):
-    #dump out index into pickle file
-    pickle.dump(
-      self.bucket_index,
-      open(self.bucket_index_file,"wb")
-    )
+  #def __del__(self):
+  #  #dump out index into pickle file
+  #  pickle.dump( \
+  #    self.bucket_index, \
+  #    open(self.bucket_index_file,"wb") \
+  #  )
 
-  def push(self,obj,name=""):
-    pickled_obj = cloudpickle.dumps(object)
+  #
+  # Pushes to AWS S3
+  #   Pushing is FREE.99 (kinda)
+  #
+  def push(self,obj,name=None):
+    pickled_obj = cloudpickle.dumps(obj)
+    if not name:
+      #TODO: default names?!??!
+      #TODO: exceptions? sorry, c++ programmer
+      print("every object needs a name silly, aborting")
+      exit(1)
+    self.s3.Object(self.bucket_name, name).put(Body=pickled_obj)
     pass
 
-  def delete(self,key):
+  #
+  # Deletes from AWS S3
+  #   Deleting is also FREE.99
+  #
+  def delete(self,target_key):
+    #TODO:Direct??
+    for key in self.Bucket.objects.all():
+      if key.key == target_key:
+        key.delete()
+        return
+    print("deleting key not found, aborting")
+    exit(1)
+
+  #
+  # Pulling is not free. Sad.
+  #
+  #
+  def pull(self,target_key):
+    #TODO:Direct?
+    for key in self.Bucket.objects.all():
+      if key.key == target_key:
+        return pickle.loads( key.get()["Body"].read() )
+
+  def ls(self):
+    for key in self.Bucket.objects.all():
+      print(key.key)
     pass
 
-  def pull(self,key):
-    pass
-
+  def list(self):
+    self.ls()
 
 
 
