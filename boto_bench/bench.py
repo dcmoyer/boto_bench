@@ -56,7 +56,6 @@ class Bench():
 
     #init self resources
     self.s3 = self.session.resource('s3')
-    print(self.session.get_available_services())
     self.lambda_service = self.session.client('lambda')
 
     #init in
@@ -109,6 +108,13 @@ class Bench():
     self.s3.Object(self.bucket_name, name).put(Body=pickled_obj)
     pass
 
+  def push_file(self,filename,name=None):
+    data = open(filename, 'rb')
+    if not name:
+      name=filename
+    self.Bucket.put_object(Key=name, Body=data)
+    data.close()
+
   #
   # Deletes from AWS S3
   #   Deleting is also FREE.99
@@ -142,10 +148,6 @@ class Bench():
   def list(self):
     self.ls()
 
-  #TODO: spin this out into not-just-the-bench
-  def L_push_lambda(self):
-    
-    pass
 
   #TODO: spin this out into not-just-the-bench
   def L_list_lambdas(self):
@@ -158,8 +160,72 @@ class Bench():
       print(func["FunctionName"])
     pass
 
+  #TODO: spin this out into not-just-the-bench
+  def L_push_function(self,\
+    function_zip_loc,\
+    lambda_handler_loc,
+    function_name,
+    runtime="python3.6",
+    desc="boto bucket loaded test lambda!"\
+    function_is_bucket_key=False):
 
 
+    #TODO: generalize this to any bucket
+    if(function_is_bucket_key):
+      code_dict = {
+        'S3Key' : function_zip_loc,
+        'S3Bucket' : self.bucket_name
+      }
+    else:
+      zip_file = open(function_zip_loc, "rb")
+      zip_bits = zip_file.read()
+      zip_file.close()
+
+      code_dict = {'ZipFile' : zip_bits}
+
+    #need the ARN
+    client = boto3.client('iam')
+
+    #TODO: allow roles other than root...
+    arn = client.get_user()['User']['Arn']
+    #print("ARN is %s" % arn)
+
+    response = client.create_function(
+      FunctionName=function_name,
+      Runtime=runtime,
+      Role=arn,
+      Handler=lambda_handler_loc,
+      Code=code_dict,
+      Description=desc,
+      Timeout=300,
+      MemorySize=64 * 2
+    )
+
+    return
+
+  def L_invoke(function_name, payload, async=False, dry_run=False):
+    if(async):
+      invocation_type = "Event"
+    else:
+      invocation_type = "RequestResponse"
+
+    if(dry_run):
+      invocation_type = "DryRun"
+
+    import json
+
+    bytes_payload = bytes(json.dumps(payload))
+
+    response = client.invoke(
+      FunctionName=function_name,
+      InvocationType=invocation_type,
+      Payload=bytes_payload
+    )
+  
+    print("[Boto Bench] Lambda Invoke")
+    print("\tResponse")
+    for key,value in response:
+      print( "%s \t %s" % (key,value))
 
 
 

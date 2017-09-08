@@ -19,4 +19,7 @@ This project relies on:
 Its examples rely on:
 - [Dipy](http://nipy.org/dipy/index.html)
 
+...and you should probably read this:
+- [AWS Official "How to Create a Lambda Deployment Package"](http://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html)
+
 

@@ -29,10 +29,22 @@ gfa = csa_model.fit(data, mask=white_matter).gfa
 
 import sys
 print(sys.getsizeof(gfa))
+print(sys.getsizeof(affine))
+print(sys.getsizeof(csd_fit.shm_coeff))
 
 import cloudpickle as cp
+import pickle
+import joblib
 
 f = open("gfa_example.cloudpickle","wb")
-cp.dump((csd_fit.shm_coeff, gfa, seeds, affine),f)
+cp.dump((csd_fit.shm_coeff, gfa, affine),f,protocol=2)
+#pickle.dump((csd_fit.shm_coeff, gfa, affine),f,protocol=2)
+#joblib.dump((csd_fit.shm_coeff, gfa, affine),f,compress=True)
+f.close()
+
+f = open("seeds.cloudpickle","wb")
+cp.dump(seeds,f,protocol=2)
+#pickle.dump(seeds,f,protocol=2)
+#joblib.dump(seeds,f,compress=True)
 f.close()
 
