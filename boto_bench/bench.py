@@ -52,7 +52,7 @@ class Bench():
     #self.credentials = credentials
 
     #TODO: change this to a boto_bench config 
-    self.bucket_name = "dcmoyer-boto-bench-workspace-1919"
+    self.bucket_name = "dcmoyer-boto-bench-workspace-1919-nhw"
     self.bb_config_dir = os.path.expanduser('~') + "/.boto_bench/"
     self.bucket_index_file = self.bb_config_dir + "bucket_index.p"
 
@@ -142,6 +142,14 @@ class Bench():
 
   def list(self):
     self.ls()
+
+  #TODO: spin this out into not-just-the-bench
+  def push_lambda(self):
+    pass
+
+
+
+
 
 
 
