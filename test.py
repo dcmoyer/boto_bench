@@ -1,6 +1,10 @@
 from boto_bench import bench as bb
 
-bench = bb.Bench(verbose = True)
+bench = bb.Bench(\
+  boto_bench_name="dcmoyer",\
+  profile="nhw", \
+  verbose = True \
+)
 
 bench.ls()
 
@@ -25,5 +29,7 @@ if test_list == test_list_pulled:
   print("yay!")  
 else:
   print(list(test_list_pulled))
+
+bench.L_ls()
 
 

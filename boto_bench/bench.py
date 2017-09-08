@@ -8,8 +8,15 @@ from botocore.exceptions import ClientError
 
 class Bench():
 
-  def __init__(self, profile=None, verbose=False):
+  def __init__(self, boto_bench_name=None, profile=None, verbose=False):
+
     import os
+
+    if not boto_bench_name:
+      print("You need a boto_bench_name. Aborting.")
+      exit(1)
+
+    self.boto_bench_name = boto_bench_name
 
     # AWS Config Logic
     try:
@@ -34,39 +41,29 @@ class Bench():
 
     print(self.session.region_name)
 
-    #there should be a cleaner way
-    #credentials = None
-    #with open(fname, "r") as config_file_reader:
-    #  for line in config_file_reader:
-    #    if line[0] == "[" and line[1:-2] == profile:
-    #      aws_access_key = config_file_reader.readline().split(" = ")[1][:-1]
-    #      aws_secret_key = config_file_reader.readline().split(" = ")[1][:-1]
-    #      credentials = (aws_access_key, aws_secret_key)
-    #    else:
-    #      continue;
-
-    #if not credentials:
-    #  print("[Boto Bench]: Credentials not found")
-    #  exit(1)
-
     #self.credentials = credentials
 
     #TODO: change this to a boto_bench config 
-    self.bucket_name = "dcmoyer-boto-bench-workspace-1919-nhw"
-    self.bb_config_dir = os.path.expanduser('~') + "/.boto_bench/"
-    self.bucket_index_file = self.bb_config_dir + "bucket_index.p"
+    self.bucket_name = "%s-boto-bench-workspace-1919-nhw" % boto_bench_name
+    #self.bb_config_dir = os.path.expanduser('~') + "/.boto_bench/"
+    #self.bucket_index_file = self.bb_config_dir + "bucket_index.p"
 
-    if not os.path.isdir(self.bb_config_dir):
-      if verbose:
-        print("[Boto Bench]: Creating config dir at %s" % self.bb_config_dir)
-      os.mkdir(self.bb_config_dir)
+    #init local directory
+    #if not os.path.isdir(self.bb_config_dir):
+    #  if verbose:
+    #    print("[Boto Bench]: Creating config dir at %s" % self.bb_config_dir)
+    #  os.mkdir(self.bb_config_dir)
 
+    #init self resources
     self.s3 = self.session.resource('s3')
+    print(self.session.get_available_services())
+    self.lambda_service = self.session.client('lambda')
 
-    if not os.path.isfile(self.bucket_index_file):
-      self.bucket_index = {}
-    else:
-      self.bucket_index = pickle.load(open(self.bucket_index_file,"rb"))
+    #init in
+    #if not os.path.isfile(self.bucket_index_file):
+    #  self.bucket_index = {}
+    #else:
+    #  self.bucket_index = pickle.load(open(self.bucket_index_file,"rb"))
 
     self._create_bucket()
     self.Bucket = self.s3.Bucket(self.bucket_name)
@@ -136,15 +133,29 @@ class Bench():
         return pickle.loads( key.get()["Body"].read() )
 
   def ls(self):
+    print("[Boto Bench] ls")
+    print("Bucket name: %s" % self.bucket_name)
     for key in self.Bucket.objects.all():
-      print(key.key)
+      print("\t%s" % key.key)
     pass
 
   def list(self):
     self.ls()
 
   #TODO: spin this out into not-just-the-bench
-  def push_lambda(self):
+  def L_push_lambda(self):
+    
+    pass
+
+  #TODO: spin this out into not-just-the-bench
+  def L_list_lambdas(self):
+    self.L_ls()
+    pass
+
+  def L_ls(self):
+    print("[Boto Bench] (Lambda) ls")
+    for func in self.lambda_service.list_functions()["Functions"]:
+      print(func["FunctionName"])
     pass
 
 
